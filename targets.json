@@ -1,0 +1,10 @@
+[
+  {"id": 1, "url": "https://go.dev"},
+  {"id": 2, "url": "https://github.com"},
+  {"id": 3, "url": "https://ya.ru"},
+  {"id": 4, "url": "https://api.github.com"},
+  {"id": 5, "url": "https://httpbin.org/status/503"},
+  {"id": 6, "url": "https://httpbin.org/delay/10"},
+  {"id": 7, "url": "https://hosts-monitor-test.invalid"},
+  {"id": 8, "url": "http://localhost:59999"}
+]
