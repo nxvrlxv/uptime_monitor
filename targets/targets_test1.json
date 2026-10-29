@@ -1,0 +1,6 @@
+[
+  {"id": 1, "url": "https://go.dev"},
+  {"id": 2, "url": "https://httpbin.org/status/500"},
+  {"id": 3, "url": "https://fake-target.invalid"},
+  {"id": 4, "url": "http://localhost:59998"}
+]

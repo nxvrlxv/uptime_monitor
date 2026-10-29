@@ -73,7 +73,7 @@ func (s *Semaphor) Release() {
 	<-s.C
 }
 
-func CheckerPool(maxCheckers int, data []config.Target, ctx context.Context, c Checker) []*Result {
+func (c *Checker) CheckerPool(maxCheckers int, data []config.Target, ctx context.Context) []*Result {
 	sem := Semaphor{
 		C: make(chan struct{}, maxCheckers),
 	}
