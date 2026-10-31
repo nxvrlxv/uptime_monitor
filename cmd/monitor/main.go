@@ -3,11 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
+	"log"
+	"net/http"
+
+	//"time"
 
 	"github.com/nxvrlxv/hosts_monitor/internal/checker"
 	"github.com/nxvrlxv/hosts_monitor/internal/config"
+	"github.com/nxvrlxv/hosts_monitor/internal/handler"
 	"github.com/nxvrlxv/hosts_monitor/internal/scheduler"
+	"github.com/nxvrlxv/hosts_monitor/internal/storage"
 )
 
 var (
@@ -23,14 +28,24 @@ func main() {
 	}
 
 	ch := checker.NewChecker()
-	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx := context.Background()
+	st := storage.CreateNewStorage()
+	h := handler.NewStorageHandler(st)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /targets", h.GetTargets)
+	mux.HandleFunc("GET /targets/{id}", h.GetTargetById)
+
+	go func() {
+		fmt.Println("listening 8080")
+		if err := http.ListenAndServe(":8080", mux); err != nil {
+			log.Fatalf("Error occured while hosting server: %w", err)
+		}
+	}()
 
 	round := func(ctx_x context.Context) {
 		resultScan := ch.CheckerPool(MaxParallelWorkers, ParsedSites, ctx_x)
-		for _, res := range resultScan {
-			fmt.Printf("Host: %v\nIs Available: %v\nResponseTime: %v\nStatus: %v\n", res.Host, res.IsUp, res.ResponseTime, res.Status)
-			fmt.Println("----------------")
-		}
+		st.FillData(resultScan)
 	}
 
 	scheduler.RunTicker(ctx, round, 0)
