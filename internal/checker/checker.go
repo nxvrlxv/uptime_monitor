@@ -15,6 +15,7 @@ type Checker struct {
 }
 
 type Result struct {
+	ID           int
 	IsUp         bool
 	Host         string
 	Status       int
@@ -30,12 +31,13 @@ func NewChecker() *Checker {
 	}
 }
 
-func (c *Checker) Check(ctx context.Context, target config.Target) *Result {
+func (c *Checker) Check(ctx context.Context, target config.Target) Result {
 	start := time.Now()
 	resp, err := c.Client.Get(target.URL)
 	Url, _ := url.Parse(target.URL)
 	if err != nil {
-		res := &Result{
+		res := Result{
+			ID:           target.ID,
 			IsUp:         false,
 			Host:         Url.Host,
 			ResponseTime: time.Since(start),
@@ -51,13 +53,14 @@ func (c *Checker) Check(ctx context.Context, target config.Target) *Result {
 	res.ResponseTime = respTime
 	res.Status = resp.StatusCode
 	res.Host = Url.Host
+	res.ID = target.ID
 	if resp.StatusCode < 400 {
 		res.IsUp = true
 	} else {
 		res.IsUp = false
 	}
 
-	return &res
+	return res
 
 }
 
@@ -73,12 +76,12 @@ func (s *Semaphor) Release() {
 	<-s.C
 }
 
-func (c *Checker) CheckerPool(maxCheckers int, data []config.Target, ctx context.Context) []*Result {
+func (c *Checker) CheckerPool(maxCheckers int, data []config.Target, ctx context.Context) []Result {
 	sem := Semaphor{
 		C: make(chan struct{}, maxCheckers),
 	}
 	var wg sync.WaitGroup
-	resultCh := make(chan *Result, len(data))
+	resultCh := make(chan Result, len(data))
 
 	for _, target := range data {
 		wg.Add(1)
@@ -95,7 +98,7 @@ func (c *Checker) CheckerPool(maxCheckers int, data []config.Target, ctx context
 
 	wg.Wait()
 	close(resultCh)
-	resArr := make([]*Result, 0)
+	resArr := make([]Result, 0)
 	for res := range resultCh {
 		resArr = append(resArr, res)
 	}
